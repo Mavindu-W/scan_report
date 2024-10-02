@@ -22,8 +22,8 @@ API_KEY = 'a70p8l1f5i04pgk6ujhko76dov'  # ZAP API key
 ZAP_URL = 'http://localhost:8080'  # ZAP instance URL
 zap = ZAPv2(apikey=API_KEY, proxies={'http': ZAP_URL, 'https': ZAP_URL})
 
-# Report directory for both live host and ZAP scan reports
-REPORT_DIR = '/home/mavindu/Desktop/test/reports/'
+# Base report directory for both live host and ZAP scan reports
+BASE_REPORT_DIR = '/home/mavindu/Desktop/test/reports/'
 
 # Function to display ASCII banner
 def display_banner():
@@ -111,7 +111,7 @@ def configure_aggressive_scan():
     zap.ascan.set_option_delay_in_ms(0)  # No delay between scan requests
 
 # Function to scan the URL using ZAP and generate a report
-def zap_scan(url):
+def zap_scan(url, scan_report_dir):
     configure_aggressive_scan()  # Configure ZAP for aggressive scan
     print(f"Starting ZAP scan for {url}")
     
@@ -133,13 +133,13 @@ def zap_scan(url):
 
     # Generate the ZAP scan report in HTML
     report_filename = f"{url.replace('https://', '').replace('http://', '').replace('/', '_')}_report.html"
-    report_path = os.path.join(REPORT_DIR, report_filename)
+    report_path = os.path.join(scan_report_dir, report_filename)
     with open(report_path, 'w') as report_file:
         report_file.write(zap.core.htmlreport())
     print(f"Report saved to: {report_path}")
 
 # Function to check live URLs and generate the live hosts report
-def check_live_hosts():
+def check_live_hosts(report_dir):
     with alive_bar(len(url_list), bar='blocks') as bar:
         for url in url_list:
             try:
@@ -166,9 +166,8 @@ def check_live_hosts():
                 raise SystemExit
 
     # Save live host results to HTML and PDF
-    timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-    live_host_report_html = os.path.join(REPORT_DIR, f"live_host_report_{timestamp}.html")
-    live_host_report_pdf = os.path.join(REPORT_DIR, f"live_host_report_{timestamp}.pdf")
+    live_host_report_html = os.path.join(report_dir, "live_host_report.html")
+    live_host_report_pdf = os.path.join(report_dir, "live_host_report.pdf")
 
     # HTML report
     with open(live_host_report_html, 'w') as report_file:
@@ -192,7 +191,7 @@ def check_live_hosts():
     print("\n\n")
 
 # Function to run ZAP scans on live URLs only
-def run_zap_scans():
+def run_zap_scans(report_dir):
     if not live_urls:
         print(style.YELLOW + "[!] No live URLs found, skipping ZAP scans." + style.RESET)
         return
@@ -200,23 +199,30 @@ def run_zap_scans():
     print(style.GREEN + "[+] Starting ZAP scans for live URLs..." + style.RESET)
     
     for url in live_urls:
+        # Create a subfolder for each host's report
+        host_report_dir = os.path.join(report_dir, url.replace('https://', '').replace('http://', '').replace('/', '_'))
+        if not os.path.exists(host_report_dir):
+            os.makedirs(host_report_dir)
+        
         start_new_session()  # Start a new ZAP session for each live URL
-        zap_scan(url)
+        zap_scan(url, host_report_dir)
 
 # Main
 if __name__ == '__main__':
     signal.signal(signal.SIGINT, quit)
 
-    # Ensure report directory exists
-    if not os.path.exists(REPORT_DIR):
-        os.makedirs(REPORT_DIR)
-
     # Display banner before running the scan
     display_banner()
 
-    # First, check for live hosts
-    check_live_hosts()
+    # Create a new report directory for each day, named with the date and time
+    timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    daily_report_dir = os.path.join(BASE_REPORT_DIR, timestamp)
+    if not os.path.exists(daily_report_dir):
+        os.makedirs(daily_report_dir)
 
-    # Then, run ZAP scans for live hosts only
-    run_zap_scans()
+    # First, check for live hosts and generate live host report
+    check_live_hosts(daily_report_dir)
+
+    # Then, run ZAP scans for live hosts only and save reports in corresponding subfolders
+    run_zap_scans(daily_report_dir)
 
