@@ -1,0 +1,15 @@
+tab-adx-dev-universal.directfn.net
+tab-adx-qa-universal.directfn.net
+tab-ajc-qa-trade-universal.directfn.net
+tab-alawwal-qa-trade-universal.directfn.net
+tab-alkahir-dev-trade-universal.directfn.net
+tab-alkahir-qa-trade-universal.directfn.net
+tab-anbi-qa-trade-universal.directfn.net
+tab-ati-qa-trade-universal.directfn.net
+tab-bcp-qa-trade-universal.directfn.net
+tab-binsec-qa-trade-universal.directfn.net
+tab-bk-qa-price-universal.directfn.net
+tab-cimb-qa-trade-universal.directfn.net
+tab-dib-qa-trade-universal.directfn.net
+tab-egypt-retail-qa-price-universal.directfn.net
+tab-gib-qa-trade-universal.directfn.net
